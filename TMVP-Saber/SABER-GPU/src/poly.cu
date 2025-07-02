@@ -1186,40 +1186,23 @@ __global__ void wmma_ker_padding2(half *a1, half *b1, half *a2, half *b2, half *
       wmma::load_matrix_sync(a1_frag, a1 + ldA_offset , SABER_N/2);    
       wmma::load_matrix_sync(b1_frag, b1 + ldB_offset , SABER_N/2);
       wmma::mma_sync(x_frag, a1_frag, b1_frag, x_frag);
-   }
 
-   st_offset = row_idx + col_idx * SABER_N/2;
-   wmma::store_matrix_sync(c1 + st_offset, x_frag, SABER_N/2, wmma::mem_col_major);
-
-   
-   for (int i = 0; i < (SABER_N/2)/WMMA_M; i ++)    
-   {
-      ldA_offset = row_idx*(SABER_N/2) + i*WMMA_M;
-      ldB_offset = col_idx*(SABER_N/2) + i*WMMA_M;
-    
       wmma::load_matrix_sync(a2_frag, a2 + ldA_offset , SABER_N/2);    
       wmma::load_matrix_sync(b2_frag, b2 + ldB_offset , SABER_N/2);
       wmma::mma_sync(y_frag, a2_frag, b2_frag, y_frag);
-   }
 
-   st_offset = row_idx + col_idx * SABER_N/2;
-   wmma::store_matrix_sync(c2 + st_offset, y_frag, SABER_N/2, wmma::mem_col_major);
-
-
-   for (int i = 0; i < (SABER_N/2)/WMMA_M; i ++)    
-   {
-      ldA_offset = row_idx*(SABER_N/2) + i*WMMA_M;
-      ldB_offset = col_idx*(SABER_N/2) + i*WMMA_M;
-    
       wmma::load_matrix_sync(a3_frag, a3 + ldA_offset , SABER_N/2);    
       wmma::load_matrix_sync(b3_frag, b3 + ldB_offset , SABER_N/2);
       wmma::mma_sync(z_frag, a3_frag, b3_frag, z_frag);
    }
 
    st_offset = row_idx + col_idx * SABER_N/2;
+
+   wmma::store_matrix_sync(c1 + st_offset, x_frag, SABER_N/2, wmma::mem_col_major);
+   wmma::store_matrix_sync(c2 + st_offset, y_frag, SABER_N/2, wmma::mem_col_major);
    wmma::store_matrix_sync(c3 + st_offset, z_frag, SABER_N/2, wmma::mem_col_major);
 
-}   
+} 
 
 ///////////////////////////////////////////////////////////////
 
@@ -1231,8 +1214,8 @@ __global__ void convertFp32ToU16modP (uint16_t *out, float *p1, float *p2, float
    uint32_t bidx = blockIdx.x*SABER_N;
    uint32_t bidx2 = blockIdx.x*SABER_N/2;
     
-   out[bidx + tidx] +=  (int32_t) (p1[tidx] + p2[tidx]);
-   out[bidx + (SABER_N/2) + tidx] += (int32_t) (p1[tidx] - p3[tidx]); 
+   out[bidx + tidx] +=  MODP((int32_t)(p1[tidx] + p2[tidx]));
+   out[bidx + (SABER_N/2) + tidx] += MODP((int32_t)(p1[tidx] - p3[tidx]));
 
 }
 
