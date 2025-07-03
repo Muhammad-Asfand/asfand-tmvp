@@ -126,32 +126,8 @@ void saber_enc(uint8_t mode, uint8_t *h_k, uint8_t *h_pk, uint8_t *h_c)  {
     shake128_gpu<<<BATCH, 32>>>(d_A8, d_pk + SABER_POLYVECCOMPRESSEDBYTES, SABER_SEEDBYTES, SABER_L * SABER_POLYVECBYTES, SABER_L * SABER_POLYVECBYTES);
     BS2POLVECq_gpu2<<<BATCH, SABER_N/8>>>(d_A8, d_A);    
       
-if(mode==0) 
-{   
-    for (int j = 0; j < SABER_L; j++){
-        convertnegacyclictest2<<< SABER_N, SABER_N >>>(arr, d_sp + j*SABER_N);
-        submatrix_m1_tensor <<< SABER_N/2, SABER_N/2 >>>(a1, a2, a3, arr);
-    for (int i = 0; i < SABER_L; i++){
-        submatrix_m2_tensor <<< SABER_N/2, SABER_N/2 >>>(b1, b2, b3, d_A + i*SABER_N*SABER_L + j*SABER_N);
-        wmma_ker_padding2<<< blocks, threads >>> (a1, b1, a2, b2, a3, b3, c_wmma1, c_wmma2, c_wmma3);
-        convertFp32ToU16modP_m<<< BATCH, SABER_N/2 >>>(d_bp + i*SABER_N, c_wmma1, c_wmma2, c_wmma3);
-    }}
-    MatVecMul_gpu_shared<<<BATCH, SABER_N>>>(d_bp, d_A, d_sp);
-}
-else if(mode==1)
-{
-    for (int j = 0; j < SABER_L; j++){
-        convertnegacyclictest2<<< SABER_N, SABER_N >>>(arr, d_sp + j*SABER_N);
-        submatrix_m2 <<< SABER_N/2, SABER_N/2 >>>(ac1, ac2, ac3, arr);
-    for (int i = 0; i < SABER_L; i++){
-        submatrix_m1 <<< BATCH, SABER_N/2 >>>(bc1, bc2, bc3, d_A + i*SABER_N*SABER_L + j*SABER_N);
-        matvecp_cuda <<< BATCH, SABER_N >>> (ac1, bc1, ac2, bc2, ac3, bc3, p1, p2, p3);
-        matvecout_cudaq <<< BATCH, SABER_N/2 >>>(p1, p2, p3, d_bp + i*SABER_N);
-    }} 
-}
-else{
     MatVecMul_gpu_shared<<<BATCH, SABER_N>>>(d_bp, d_A, d_sp);     
-}    
+  
     post_process<<<BATCH, SABER_N>>>(d_bp);
     // // POLVECp2BS(ciphertext, bp);
     POLVECp2BS_gpu<<<BATCH, SABER_N / 4>>>(d_c, d_bp);
