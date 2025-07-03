@@ -468,7 +468,7 @@ else{
     {
         for(i=0; i<SABER_KEYBYTES; i++)
         {
-            if(h_m[j*SABER_KEYBYTES + i]!=h_m[j*SABER_KEYBYTES + i]){
+            if(h_m[j*SABER_KEYBYTES + i]!=h_k[j*SABER_KEYBYTES + i]){
                 //printf("wrong at batch %u element %u: %u %u\n", j, i, h_m[j*SABER_BYTES_CCA_DEC + i], h_k[j*SABER_KEYBYTES + i]);
                 break;
             }
